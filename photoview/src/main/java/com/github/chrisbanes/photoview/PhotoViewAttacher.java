@@ -20,6 +20,7 @@ import android.graphics.Matrix;
 import android.graphics.Matrix.ScaleToFit;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -149,14 +150,21 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
         @Override
         public void onScale(float scaleFactor, float focusX, float focusY, float dx, float dy) {
-            if (getScale() < mMaxScale || scaleFactor < 1f) {
+
+
+            Log.d("SCALE_DEBUG",""+scaleFactor);
+            float zoomFactor = scaleFactor * scaleFactor;// Calculate the amount of zoom to apply
+            if (getScale() < mMaxScale || zoomFactor < 1f) {
                 if (mScaleChangeListener != null) {
-                    mScaleChangeListener.onScaleChange(scaleFactor, focusX, focusY);
+                    mScaleChangeListener.onScaleChange(zoomFactor, focusX, focusY);
                 }
-                mSuppMatrix.postScale(scaleFactor, scaleFactor, focusX, focusY);
+                // Calculate the amount of zoom to apply
+
+                mSuppMatrix.postScale(zoomFactor, zoomFactor, focusX, focusY);
                 mSuppMatrix.postTranslate(dx, dy);
                 checkAndDisplayMatrix();
             }
+
         }
     };
 
