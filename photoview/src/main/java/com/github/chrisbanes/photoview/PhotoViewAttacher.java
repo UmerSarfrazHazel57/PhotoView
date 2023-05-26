@@ -96,6 +96,8 @@ public class PhotoViewAttacher implements View.OnTouchListener,
     private boolean mZoomEnabled = true;
     private ScaleType mScaleType = ScaleType.FIT_CENTER;
 
+    private boolean isInZoomAnim =false;
+
     private OnGestureListener onGestureListener = new OnGestureListener() {
         @Override
         public void onDrag(float dx, float dy) {
@@ -152,8 +154,11 @@ public class PhotoViewAttacher implements View.OnTouchListener,
         public void onScale(float scaleFactor, float focusX, float focusY, float dx, float dy) {
 
 
-            Log.d("SCALE_DEBUG",""+scaleFactor);
-            float zoomFactor = scaleFactor * scaleFactor;// Calculate the amount of zoom to apply
+            //Log.d("SCALE_DEBUG",""+scaleFactor);
+            float zoomFactor = scaleFactor; // Calculate the amount of zoom to apply
+            if(!isInZoomAnim){
+                zoomFactor *= scaleFactor;
+            }
             if (getScale() < mMaxScale || zoomFactor < 1f) {
                 if (mScaleChangeListener != null) {
                     mScaleChangeListener.onScaleChange(zoomFactor, focusX, focusY);
@@ -242,10 +247,14 @@ public class PhotoViewAttacher implements View.OnTouchListener,
                     float x = ev.getX();
                     float y = ev.getY();
                     if (scale < getMediumScale()) {
+                        Log.d("SCALE_DEBUG","Setting medium scale "+scale + " mid is"+getMediumScale());
+
                         setScale(getMediumScale(), x, y, true);
                     } else if (scale >= getMediumScale() && scale < getMaximumScale()) {
+                        Log.d("SCALE_DEBUG","Setting max scale "+scale + " max is"+getMaximumScale());
                         setScale(getMaximumScale(), x, y, true);
                     } else {
+                        Log.d("SCALE_DEBUG","Setting small scale "+scale + " min is"+getMinimumScale());
                         setScale(getMinimumScale(), x, y, true);
                     }
                 } catch (ArrayIndexOutOfBoundsException e) {
@@ -750,13 +759,17 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
         @Override
         public void run() {
+            isInZoomAnim = true;
             float t = interpolate();
             float scale = mZoomStart + t * (mZoomEnd - mZoomStart);
             float deltaScale = scale / getScale();
             onGestureListener.onScale(deltaScale, mFocalX, mFocalY);
+
             // We haven't hit our target scale yet, so post ourselves again
             if (t < 1f) {
                 Compat.postOnAnimation(mImageView, this);
+            }else{
+                isInZoomAnim = false;
             }
         }
 
