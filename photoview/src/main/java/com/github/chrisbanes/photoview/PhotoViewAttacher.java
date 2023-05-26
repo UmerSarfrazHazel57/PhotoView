@@ -101,6 +101,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
     private OnGestureListener onGestureListener = new OnGestureListener() {
         @Override
         public void onDrag(float dx, float dy) {
+
             if (mScaleDragDetector.isScaling()) {
                 return; // Do not drag if we are already scaling
             }
@@ -139,6 +140,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
         @Override
         public void onFling(float startX, float startY, float velocityX, float velocityY) {
+
             mCurrentFlingRunnable = new FlingRunnable(mImageView.getContext());
             mCurrentFlingRunnable.fling(getImageViewWidth(mImageView),
                 getImageViewHeight(mImageView), (int) velocityX, (int) velocityY);
@@ -147,6 +149,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
 
         @Override
         public void onScale(float scaleFactor, float focusX, float focusY) {
+
             onScale(scaleFactor, focusX, focusY, 0, 0);
         }
 
@@ -154,7 +157,7 @@ public class PhotoViewAttacher implements View.OnTouchListener,
         public void onScale(float scaleFactor, float focusX, float focusY, float dx, float dy) {
 
 
-            //Log.d("SCALE_DEBUG",""+scaleFactor);
+            Log.d("SCALE_DEBUG",""+scaleFactor);
             float zoomFactor = scaleFactor; // Calculate the amount of zoom to apply
             if(!isInZoomAnim){
                 zoomFactor *= scaleFactor;

@@ -16,6 +16,8 @@
 package com.github.chrisbanes.photoview;
 
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.VelocityTracker;
@@ -30,7 +32,7 @@ class CustomGestureDetector {
 
     private int mActivePointerId = INVALID_POINTER_ID;
     private int mActivePointerIndex = 0;
-    private final ScaleGestureDetector mDetector;
+    private final CustomScaleGestureDetector mDetector;
 
     private VelocityTracker mVelocityTracker;
     private boolean mIsDragging;
@@ -54,6 +56,7 @@ class CustomGestureDetector {
             public boolean onScale(ScaleGestureDetector detector) {
                 float scaleFactor = detector.getScaleFactor();
 
+
                 if (Float.isNaN(scaleFactor) || Float.isInfinite(scaleFactor))
                     return false;
              
@@ -72,6 +75,7 @@ class CustomGestureDetector {
 
             @Override
             public boolean onScaleBegin(ScaleGestureDetector detector) {
+                Log.d("SCALE_DEBUG","Scale has begun");
                 lastFocusX = detector.getFocusX();
                 lastFocusY = detector.getFocusY();
                 return true;
@@ -82,7 +86,47 @@ class CustomGestureDetector {
                 // NO-OP
             }
         };
-        mDetector = new ScaleGestureDetector(context, mScaleListener);
+
+        CustomScaleGestureDetector.OnScaleGestureListener scaleGestureDetector = new CustomScaleGestureDetector.OnScaleGestureListener(){
+
+            private float lastFocusX, lastFocusY = 0;
+            @Override
+            public void onScale(float scaleFactor, float focusX, float focusY) {
+                //float scaleFactor = detector.getScaleFactor();
+
+
+                if (Float.isNaN(scaleFactor) || Float.isInfinite(scaleFactor))
+                    return;
+
+                if (scaleFactor >= 0) {
+                    mListener.onScale(scaleFactor,
+                           focusX,
+                            focusY,
+                            focusX - lastFocusX,
+                           focusY - lastFocusY
+                    );
+                    lastFocusX = focusX;
+                    lastFocusY = focusY;
+                }
+            }
+
+            @Override
+            public void onScaleBegin(float scaleFactor, float focusX, float focusY) {
+                Log.d("SCALE_DEBUG","Scale has begun");
+                lastFocusX = focusX;
+                lastFocusY = focusY;
+            }
+
+            @Override
+            public void onScaleEnd(float scaleFactor, float focusX, float focusY) {
+
+            }
+        };
+
+
+        mDetector = new CustomScaleGestureDetector(scaleGestureDetector);
+
+
     }
 
     private float getActiveX(MotionEvent ev) {
@@ -120,6 +164,7 @@ class CustomGestureDetector {
     }
 
     private boolean processTouchEvent(MotionEvent ev) {
+
         final int action = ev.getAction();
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
@@ -138,12 +183,14 @@ class CustomGestureDetector {
                 final float x = getActiveX(ev);
                 final float y = getActiveY(ev);
                 final float dx = x - mLastTouchX, dy = y - mLastTouchY;
-
+                boolean b = Math.sqrt((dx * dx) + (dy * dy)) >= mTouchSlop;
+                Log.d("SCALE_DEBUG","Touch is "+ b +" and dragging is "+!mIsDragging);
                 if (!mIsDragging) {
                     // Use Pythagoras to see if drag length is larger than
                     // touch slop
-                    mIsDragging = Math.sqrt((dx * dx) + (dy * dy)) >= mTouchSlop;
+                    mIsDragging = b;
                 }
+
 
                 if (mIsDragging) {
                     mListener.onDrag(dx, dy);
@@ -212,3 +259,6 @@ class CustomGestureDetector {
         return true;
     }
 }
+
+
+
